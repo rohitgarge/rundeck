@@ -102,25 +102,50 @@ class BasicJobsSpec extends SeleniumBase {
     def "edit job set description"() {
         when:
             def jobCreatePage = page JobCreatePage, SELENIUM_BASIC_PROJECT
-            def jobShowPage = page JobShowPage
-        then:
-            jobCreatePage.loadEditPath SELENIUM_BASIC_PROJECT, "b7b68386-3a52-46dc-a28b-1a4bf6ed87de"
+            jobCreatePage.nextUi=nextUi
             jobCreatePage.go()
-            jobCreatePage.descriptionTextarea.clear()
+            def jobShowPage = page JobShowPage
+            jobShowPage.nextUi=nextUi
+        then:
+            jobCreatePage.loadEditPath SELENIUM_BASIC_PROJECT, "b7b68386-3a52-46dc-a28b-1a4bf6ed87de", nextUi
+            jobCreatePage.go()
             jobCreatePage.descriptionTextarea.sendKeys 'a new job description'
             jobCreatePage.updateJobButton.click()
         expect:
             'a new job description' == jobShowPage.descriptionTextLabel.getText()
+        where:
+            nextUi<<[false,true]
     }
 
     def "edit job set groups"() {
         when:
             def jobCreatePage = page JobCreatePage, SELENIUM_BASIC_PROJECT
+            jobCreatePage.nextUi=nextUi
+            jobCreatePage.go()
         then:
-            jobCreatePage.loadEditPath SELENIUM_BASIC_PROJECT, "b7b68386-3a52-46dc-a28b-1a4bf6ed87de"
+            jobCreatePage.loadEditPath SELENIUM_BASIC_PROJECT, "b7b68386-3a52-46dc-a28b-1a4bf6ed87de", nextUi
             jobCreatePage.go()
             jobCreatePage.jobGroupField.clear()
             jobCreatePage.jobGroupField.sendKeys 'testGroup'
+        where:
+            nextUi<<[false,true]
+    }
+
+    def "edit job set group via modal"() {
+        when:
+            def jobCreatePage = page JobCreatePage, SELENIUM_BASIC_PROJECT
+            jobCreatePage.nextUi=nextUi
+            jobCreatePage.go()
+        then:
+            jobCreatePage.loadEditPath SELENIUM_BASIC_PROJECT, "b7b68386-3a52-46dc-a28b-1a4bf6ed87de", nextUi
+            jobCreatePage.go()
+            jobCreatePage.groupChooseButton.click()
+            jobCreatePage.waitForElementToBeClickable jobCreatePage.groupNameOption
+            jobCreatePage.groupNameOption.click()
+        expect:
+            'test' == jobCreatePage.jobGroupField.getAttribute("value")
+        where:
+            nextUi<<[false, true]
     }
 
     def "edit job and set schedules tab"() {
@@ -136,6 +161,31 @@ class BasicJobsSpec extends SeleniumBase {
             }
             jobCreatePage.scheduleDaysCheckboxDivField.isDisplayed()
             jobCreatePage.updateJobButton.click()
+    }
+
+    def "edit job and set executions tab"() {
+        when:
+            def jobCreatePage = page JobCreatePage, SELENIUM_BASIC_PROJECT
+        then:
+            jobCreatePage.loadEditPath SELENIUM_BASIC_PROJECT, "b7b68386-3a52-46dc-a28b-1a4bf6ed87de", nextUi
+            jobCreatePage.go()
+            jobCreatePage.tab JobTab.EXECUTION_PLUGINS click()
+            if(jobCreatePage.executionPluginsRows.size() > 1){
+                jobCreatePage.executeScript "arguments[0].scrollIntoView(true);", jobCreatePage.killHandlerPluginPreviousRow
+            }
+            if (jobCreatePage.killHandlerPluginCheckbox.isSelected()) {
+                jobCreatePage.killHandlerPluginCheckbox.click()
+                jobCreatePage.killHandlerPluginKillSpawnedCheckbox.click()
+            } else {
+                jobCreatePage.killHandlerPluginCheckbox.click()
+                jobCreatePage.killHandlerPluginCheckbox.isSelected()
+                jobCreatePage.killHandlerPluginKillSpawnedCheckbox.click()
+                jobCreatePage.killHandlerPluginKillSpawnedCheckbox.isSelected()
+            }
+            jobCreatePage.executeScript "arguments[0].scrollIntoView(true);", jobCreatePage.updateJobButton
+            jobCreatePage.updateJobButton.click()
+        where:
+            nextUi<<[false,true]
     }
 
     def "edit job and set other tab"() {
@@ -160,7 +210,7 @@ class BasicJobsSpec extends SeleniumBase {
         when:
             def jobCreatePage = page JobCreatePage, SELENIUM_BASIC_PROJECT
         then:
-            jobCreatePage.loadEditPath SELENIUM_BASIC_PROJECT, "b7b68386-3a52-46dc-a28b-1a4bf6ed87de"
+            jobCreatePage.loadEditPath SELENIUM_BASIC_PROJECT, "b7b68386-3a52-46dc-a28b-1a4bf6ed87de", false
             jobCreatePage.go()
             jobCreatePage.tab JobTab.NOTIFICATIONS click()
             jobCreatePage.addNotificationButtonByType NotificationEvent.START click()
