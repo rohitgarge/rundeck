@@ -1,5 +1,5 @@
 [submodule "packaging/packaging"]
 	path = packaging/packaging
-	url = git@github.com:rohitgarge/packaging.git
+	url = https://github.com/rohitgarge/packaging.git
 	branch = main
 
